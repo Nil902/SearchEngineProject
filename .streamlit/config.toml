@@ -1,0 +1,5 @@
+[server]
+# The default watcher walks every imported module (including transformers'
+# vision modules, which try to import torchvision and spam ModuleNotFoundError
+# warnings). We don't need hot-reload for this project, so turn it off.
+fileWatcherType = "none"

@@ -1,0 +1,20 @@
+# Secrets — never commit API keys
+.env
+
+# Python virtual environment
+venv/
+.venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# OS / editor junk
+.DS_Store
+.vscode/
+.idea/
+
+# Model / data caches
+.cache/

@@ -1,0 +1,14 @@
+# Core (required to run the starter as-is)
+streamlit
+scikit-learn
+numpy
+pandas
+sentence-transformers
+openai
+
+# Optional upgrades — install when you get there
+# sentence-transformers   # real embeddings instead of TF-IDF
+# faiss-cpu               # or chromadb, for a real vector database at scale
+# anthropic                # or openai / ollama, for LLM-generated answers
+# pypdf                    # if you want to ingest PDF documents
+python-dotenv
