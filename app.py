@@ -38,7 +38,7 @@ with st.sidebar:
     top_k = st.slider("Number of chunks to retrieve", min_value=1, max_value=10, value=3)
     # Let the user switch between the extractive fallback and real LLM answers.
     mode = st.radio("Answer mode", ["extractive", "llm"], index=0,
-                     help="Extractive works with no setup. LLM mode needs ANTHROPIC_API_KEY set.")
+                     help="Extractive works with no setup. LLM mode needs GROQ_API_KEY set.")
     st.divider()
     st.caption(f"Indexed **{len(docs)}** documents \u2192 **{len(chunks)}** chunks")
     with st.expander("Documents in this index"):
