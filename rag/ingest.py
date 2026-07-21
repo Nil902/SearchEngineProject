@@ -68,21 +68,48 @@ def load_documents(folder: str) -> List[dict]:
     return docs
 
 
+# Split on sentence-ending punctuation followed by whitespace.
+_SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
+
+
+def _split_sentences(text: str) -> List[str]:
+    parts = _SENTENCE_RE.split(text.replace("\n", " "))
+    return [s.strip() for s in parts if s.strip()]
+
+
 def chunk_text(text: str, chunk_size: int = 80, overlap: int = 20) -> List[str]:
-    """Split text into overlapping word-count chunks (simple, dependency-free)."""
-    words = text.split()
-    if not words:   # empty document -> no chunk
-        return []
-    if overlap >= chunk_size:   # guard: otherwise 'start' never advances
+    """Sentence-aware chunking.
+
+    Packs whole sentences into chunks of up to ~`chunk_size` words, carrying the
+    last `overlap` words of each chunk into the next so ideas that straddle a
+    boundary stay retrievable from either side. Keeping sentence boundaries
+    intact gives cleaner, more coherent passages than a blind word-count window.
+    """
+    if overlap >= chunk_size:   # guard so the carried-over context can't fill a whole chunk
         overlap = chunk_size - 1
-    chunks = []
-    start = 0
-    while start < len(words):
-        end = start + chunk_size  # window of 'chunk_size' words
-        chunks.append(" ".join(words[start:end]))
-        if end >= len(words):   # reached the end of the doc
-            break
-        start = end - overlap  # step forward, but back up by 'overlap'
+    sentences = _split_sentences(text)
+    if not sentences:   # empty document -> no chunk
+        return []
+    chunks: List[str] = []
+    current: List[str] = []   # words accumulated for the chunk in progress
+    for sentence in sentences:
+        words = sentence.split()
+        # A single sentence longer than the budget can't be packed — hard-split it.
+        if len(words) > chunk_size:
+            if current:
+                chunks.append(" ".join(current))
+                current = []
+            for i in range(0, len(words), chunk_size):
+                chunks.append(" ".join(words[i:i + chunk_size]))
+            continue
+        # Adding this sentence would overflow the budget -> close the current chunk,
+        # then seed the next one with `overlap` words of trailing context.
+        if current and len(current) + len(words) > chunk_size:
+            chunks.append(" ".join(current))
+            current = current[-overlap:] if overlap else []
+        current.extend(words)
+    if current:
+        chunks.append(" ".join(current))
     return chunks
 
 

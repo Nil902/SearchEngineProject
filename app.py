@@ -10,6 +10,8 @@ your final project by upgrading each piece (see the TODOs in rag/embed_store.py
 and rag/generate.py) without needing to touch this file's overall structure.
 """
 
+import time
+
 import streamlit as st
 
 from rag.ingest import load_documents, build_chunk_records
@@ -39,6 +41,9 @@ with st.sidebar:
     # Let the user switch between the extractive fallback and real LLM answers.
     mode = st.radio("Answer mode", ["extractive", "llm"], index=0,
                      help="Extractive works with no setup. LLM mode needs GROQ_API_KEY set.")
+    # MMR trades a little raw similarity for diversity, avoiding near-duplicate chunks.
+    use_mmr = st.checkbox("Diverse results (MMR)", value=False,
+                          help="Reduce near-duplicate chunks among the retrieved sources.")
     st.divider()
     st.caption(f"Indexed **{len(docs)}** documents \u2192 **{len(chunks)}** chunks")
     with st.expander("Documents in this index"):
@@ -53,15 +58,18 @@ query = st.text_input("Your question", placeholder="e.g. How does content-based 
 search_clicked = st.button("Search", type="primary")
 
 if search_clicked and query.strip():
-    retrieved = store.query(query, top_k=top_k)
+    start = time.perf_counter()
+    retrieved = store.query(query, top_k=top_k, use_mmr=use_mmr)
     answer = generate_answer(query, retrieved, mode=mode)
+    elapsed = time.perf_counter() - start
 
     st.subheader("Answer")
     st.write(answer)
+    st.caption(f"Answered in {elapsed:.2f}s \u00b7 {mode} mode \u00b7 {len(retrieved)} sources")
 
     st.subheader("Sources")
     for chunk, score in retrieved:
-        with st.expander(f"{chunk.doc_title}  \u00b7  similarity {score:.2f}"):
+        with st.expander(f"{chunk.doc_title}  \u00b7  similarity {score:.0%}"):
             st.write(chunk.text)
 elif search_clicked:
     st.warning("Type a question first.")

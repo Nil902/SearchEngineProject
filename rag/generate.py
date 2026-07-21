@@ -24,7 +24,10 @@ from .ingest import Chunk
 # Load key/value pairs from a local .env file into os.environ (if present).
 load_dotenv()
 
-MIN_RELEVANCE = 0.15 # If retrieved chunk scores below this, assume nothing is relevant
+# If the best retrieved chunk scores below this, assume nothing relevant was found.
+# Calibrated on this corpus: in-domain queries score ~0.54-0.80, out-of-domain
+# ~0.13-0.34, so 0.35 cleanly separates them. Retune if you swap the documents.
+MIN_RELEVANCE = 0.35
 
 
 def _format_sources(retrieved: List[Tuple[Chunk, float]]) -> str:
